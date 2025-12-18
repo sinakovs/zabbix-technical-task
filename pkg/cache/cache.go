@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -10,31 +9,30 @@ import (
 	"zabbix-technical-task/pkg/userrecord"
 )
 
-var (
-	errRecordExists   = errors.New("record already exists")
-	errRecordNotFound = errors.New("record not found")
-	errIDCannotChange = errors.New("cannot change record ID")
-	errSaveRecords    = errors.New("failed to write records to file")
-)
+var _ Cache = (*RecordCache)(nil)
 
 // RecordCache provides thread-safe access to a cache of records.
 type RecordCache struct {
 	mu      sync.RWMutex
 	records map[uint64]userrecord.Record
 	counter uint8
+	storage storage.Storage
 }
 
 // New creates a new RecordCache instance.
-func New() *RecordCache {
+func New(recordsStorage storage.Storage) *RecordCache {
 	records := make(map[uint64]userrecord.Record)
 
-	err := storage.InitStorage(records)
+	err := recordsStorage.Init(records)
 	if err != nil {
 		log.Printf("error initializing storage: %v\n", err)
+
+		return nil
 	}
 
 	return &RecordCache{
 		records: records,
+		storage: recordsStorage,
 		counter: 0,
 	}
 }
@@ -44,23 +42,28 @@ func (r *RecordCache) Add(id uint64, record userrecord.Record) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if r.counter >= 50 {
-		log.Println("cache limit reached")
-
-		err := storage.WriteRecordsToFile(r.records)
-		if err != nil {
-			return fmt.Errorf("writing records to file: %w", errSaveRecords)
-		}
-
-		r.counter = 0
-	}
-
 	_, exists := r.records[id]
 	if exists {
 		return fmt.Errorf("record with id %d: %w", id, errRecordExists)
 	}
 
+	if r.counter >= 49 {
+		log.Println("cache limit reached")
+
+		err := r.storage.Save(r.records)
+		if err != nil {
+			return fmt.Errorf("writing records to file: %w", errSaveRecords)
+		}
+
+		r.counter = 0
+
+		r.records[id] = record
+
+		return nil
+	}
+
 	r.records[id] = record
+	r.counter++
 
 	return nil
 }
@@ -122,7 +125,7 @@ func (r *RecordCache) SaveRecords() error {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	err := storage.WriteRecordsToFile(r.records)
+	err := r.storage.Save(r.records)
 	if err != nil {
 		return fmt.Errorf("saving records to file: %w", errSaveRecords)
 	}

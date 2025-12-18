@@ -16,18 +16,18 @@ var errWrongID = errors.New("wrong ID")
 
 // RecordHandler handles HTTP requests for record operations.
 type RecordHandler struct {
-	records *cache.RecordCache
+	cache cache.Cache
 }
 
 // New creates a new handler with the given record cache.
-func New(records *cache.RecordCache) *RecordHandler {
+func New(recordsCache cache.Cache) *RecordHandler {
 	return &RecordHandler{
-		records: records,
+		cache: recordsCache,
 	}
 }
 
-// PostData handles POST /records requests to create a new record.
-func (h *RecordHandler) PostData(w http.ResponseWriter, r *http.Request) {
+// Post handles POST /records requests to create a new record.
+func (h *RecordHandler) Post(w http.ResponseWriter, r *http.Request) {
 	var record userrecord.Record
 
 	err := json.NewDecoder(r.Body).Decode(&record)
@@ -51,7 +51,7 @@ func (h *RecordHandler) PostData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.records.Add(id, record)
+	err = h.cache.Add(id, record)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 
@@ -68,8 +68,8 @@ func (h *RecordHandler) PostData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetData handles GET /records/{id} requests to retrieve a record by ID.
-func (h *RecordHandler) GetData(w http.ResponseWriter, r *http.Request) {
+// Get handles GET /records/{id} requests to retrieve a record by ID.
+func (h *RecordHandler) Get(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(strings.TrimPrefix(r.URL.Path, "/records/"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -77,7 +77,7 @@ func (h *RecordHandler) GetData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	record, err := h.records.Get(id)
+	record, err := h.cache.Get(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 
@@ -94,8 +94,8 @@ func (h *RecordHandler) GetData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// PutData handles PUT /records/{id} requests to update an existing record.
-func (h *RecordHandler) PutData(w http.ResponseWriter, r *http.Request) {
+// Put handles PUT /records/{id} requests to update an existing record.
+func (h *RecordHandler) Put(w http.ResponseWriter, r *http.Request) {
 	var record userrecord.Record
 
 	id, err := parseID(strings.TrimPrefix(r.URL.Path, "/records/"))
@@ -119,7 +119,7 @@ func (h *RecordHandler) PutData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.records.Update(id, record)
+	err = h.cache.Update(id, record)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 
@@ -136,8 +136,8 @@ func (h *RecordHandler) PutData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// DeleteData andles DELETE /records/{id} requests to delete a record by ID.
-func (h *RecordHandler) DeleteData(w http.ResponseWriter, r *http.Request) {
+// Delete handles DELETE /records/{id} requests to delete a record by ID.
+func (h *RecordHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(strings.TrimPrefix(r.URL.Path, "/records/"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -145,7 +145,7 @@ func (h *RecordHandler) DeleteData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.records.Delete(id)
+	err = h.cache.Delete(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 

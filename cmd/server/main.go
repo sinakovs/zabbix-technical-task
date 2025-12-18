@@ -10,13 +10,21 @@ import (
 
 	"zabbix-technical-task/internal/router"
 	"zabbix-technical-task/pkg/cache"
+	"zabbix-technical-task/pkg/storage"
 )
 
 func main() {
 	addr := "localhost"
 	port := "8080"
 
-	records := cache.New()
+	fileStorage := storage.NewFileStorage("data/data.txt")
+
+	records := cache.New(fileStorage)
+	if records == nil {
+		log.Fatal("failed to create record cache")
+
+		return
+	}
 
 	routes := router.New(records)
 
@@ -40,16 +48,16 @@ func main() {
 
 	<-shutdown.Done()
 
-	err := records.SaveRecords()
-	if err != nil {
-		log.Printf("Shutdown whit error saving records: %v\n", err)
-	}
-
 	log.Println("Shutting down server...")
 
-	err = srv.Shutdown(context.Background())
+	err := srv.Shutdown(context.Background())
 	if err != nil {
 		log.Printf("Shutdown with error: %v\n", err)
+	}
+
+	err = records.SaveRecords()
+	if err != nil {
+		log.Printf("Shutdown whit error saving records: %v\n", err)
 	}
 
 	log.Println("Shutdown complete.")

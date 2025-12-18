@@ -1,15 +1,12 @@
 package userrecord
 
-import (
-	"errors"
-	"log"
-)
+import "errors"
 
 var (
 	errNoID        = errors.New("missing id")
 	errIDNotNumber = errors.New("id must be a number")
 	errIDNotUint   = errors.New("'id' must be a non-negative integer")
-	errIDNotUint64 = errors.New("id is not a uint64")
+	errID          = errors.New("id is not exist or is not a uint64")
 )
 
 // Record represents a generic record with dynamic fields.
@@ -40,13 +37,8 @@ func (r Record) Validate() error {
 func (r Record) ID() (uint64, error) {
 	id, ok := r["id"].(uint64)
 	if !ok {
-		return 0, errIDNotUint64
+		return 0, errID
 	}
 
 	return id, nil
-}
-
-// CheckIDType prints the type of the 'id' field in the record.
-func (r Record) CheckIDType() {
-	log.Printf("ID type: %T\n", r["id"])
 }
