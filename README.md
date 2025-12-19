@@ -21,7 +21,7 @@ This will build docker image from golang:1.24 and install all dependencies
 
 ### 2️⃣ Run the container
 ```bash
-docker run -p 8080:8080 --rm file-crud-api
+docker run -p 8080:8080 --rm zabbix-technical-task 
 ```
 The server will listen on port 8080.
 
