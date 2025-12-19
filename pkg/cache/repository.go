@@ -6,6 +6,8 @@ import (
 	"zabbix-technical-task/pkg/userrecord"
 )
 
+const maxUnbackedRecords = 49
+
 var (
 	errRecordExists   = errors.New("record already exists")
 	errRecordNotFound = errors.New("record not found")

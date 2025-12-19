@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-	addr := "localhost"
 	port := "8080"
 
 	fileStorage := storage.NewFileStorage("data/data.txt")
@@ -29,7 +28,7 @@ func main() {
 	routes := router.New(records)
 
 	srv := &http.Server{
-		Addr:              addr + ":" + port,
+		Addr:              "" + ":" + port,
 		Handler:           routes.Mux,
 		ReadHeaderTimeout: 5 * time.Second,
 	}

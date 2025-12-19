@@ -6,10 +6,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"zabbix-technical-task/pkg/storage/mocks"
 	"zabbix-technical-task/pkg/userrecord"
-
-	"github.com/stretchr/testify/mock"
 )
 
 func TestNew(t *testing.T) {

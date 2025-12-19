@@ -47,7 +47,7 @@ func (r *RecordCache) Add(id uint64, record userrecord.Record) error {
 		return fmt.Errorf("record with id %d: %w", id, errRecordExists)
 	}
 
-	if r.counter >= 49 {
+	if r.counter >= maxUnbackedRecords {
 		log.Println("cache limit reached")
 
 		err := r.storage.Save(r.records)
